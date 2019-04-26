@@ -5,11 +5,11 @@ var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 
 // var indexRouter = require("./routes/index");
-var followersRouter = require("./routes/followers");
-var parseFollowersRouter = require("./routes/parseFollowers");
-var parsePostsRouter = require("./routes/parsePosts");
-var parseLikesRouter = require("./routes/parseLikes");
-var syncUserLikes = require("./routes/syncUserLikes");
+var shortFollowersListRouter = require("./src/routes/1-get-short-followers-list");
+var fullFollowersListRouter = require("./src/routes/2-get-full-followers-list");
+var postsListRouter = require("./src/routes/3-get-posts-list");
+var postsListWithLikesRouter = require("./src/routes/4-add-likes-to-posts-list");
+var followersListWithLikesRouter = require("./src/routes/5-add-likes-to-user.js");
 
 var app = express();
 
@@ -24,12 +24,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // app.use("/", indexRouter);
-app.use("/followers", followersRouter);
-app.use("/parse-followers", parseFollowersRouter);
-app.use("/parse-posts", parsePostsRouter);
-app.use("/parse-likes", parseLikesRouter);
-app.use("/add-posts-to", parseLikesRouter);
-app.use("/sync-user-likes", syncUserLikes);
+app.use("/get-short-follower-list", shortFollowersListRouter);
+app.use("/get-full-followers-list", fullFollowersListRouter);
+app.use("/get-posts-list", postsListRouter);
+app.use("/add-likes-to-posts", postsListWithLikesRouter);
+app.use("/add-likes-to-user", followersListWithLikesRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
