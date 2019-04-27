@@ -11,7 +11,7 @@ router.get("/", function(req, res, next) {
   const followersWithLikes = fullFollowersList.list.map(follower => {
     const data = postsListWithLikes.list.reduce(
       (memo, post) => {
-        if (post.likes.includes(follower.username)) {
+        if (post.likes.followers.includes(follower.username)) {
           memo.likes.push(post.shortcode);
           memo.count++;
         } else {
@@ -37,7 +37,7 @@ router.get("/", function(req, res, next) {
     "data/5-full-followers-list-with-likes.json",
     followersWithLikes,
     function() {
-      res.render(JSON.stringify(followersWithLikes.length));
+      res.send(JSON.stringify(followersWithLikes.length));
     }
   );
 });

@@ -51,10 +51,10 @@ function parseFollower(res, list, username, index) {
           };
 
           saveDataToFile("data/2-full-followers-list.json", data, function() {
-            res.render("index", { title: JSON.stringify(data) });
+            res.send(JSON.stringify(data));
           });
         });
-    }, 1000);
+    }, 900);
   });
 }
 
@@ -89,7 +89,7 @@ router.get("/", function(req, res, next) {
     };
 
     saveDataToFile("data/2-full-followers-list.json", data, function() {
-      res.render("index", { title: JSON.stringify(data) });
+      res.send(JSON.stringify(data.list.length));
     });
   });
 });

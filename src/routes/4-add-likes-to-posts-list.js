@@ -3,6 +3,7 @@ var axios = require("axios");
 var fs = require("fs");
 var config = require("config");
 
+var shortFollowersList = require("../../data/1-short-followers-list.json");
 var postsList = require("../../data/3-posts-list.json");
 var postsListWithLikes = require("../../data/4-posts-list-with-likes.json");
 var saveDataToFile = require("../services/saveDataToFile");
@@ -54,14 +55,33 @@ function parseLikes(list, shortcode, end_cursor) {
   });
 }
 
+function filtersFollowers(usernames) {
+  return usernames.reduce(
+    (memo, username) => {
+      if (shortFollowersList.list.includes(username)) {
+        memo.followers.push(username);
+      } else {
+        memo.nonFollowers.push(username);
+      }
+
+      return memo;
+    },
+    {
+      followers: [],
+      nonFollowers: []
+    }
+  );
+}
+
 function parsePost(parsedPosts, post, index) {
   return new Promise((resolve, reject) => {
     console.log("post index == ", index);
     parseLikes([], post.shortcode).then(usernames => {
+      const likes = filtersFollowers(usernames);
       const newList = parsedPosts.concat([
         {
           ...post,
-          likes: usernames
+          likes
         }
       ]);
 
@@ -107,7 +127,7 @@ router.get("/", function(req, res, next) {
     };
 
     saveDataToFile("data/4-posts-list-with-likes.json", data, function() {
-      res.render(JSON.stringify(postsListWithLikes));
+      res.send(JSON.stringify(postsListWithLikes.length));
     });
   });
 });

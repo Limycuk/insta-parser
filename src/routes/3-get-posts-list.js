@@ -8,6 +8,8 @@ var saveDataToFile = require("../services/saveDataToFile");
 
 var router = express.Router();
 
+const LIMIT_OF_POSTS = 50;
+
 function parsePost(res, list, end_cursor, index) {
   return new Promise((resolve, reject) => {
     const variables = {
@@ -41,15 +43,16 @@ function parsePost(res, list, end_cursor, index) {
           };
         });
 
-        if (page_info.has_next_page) {
-          parsePost(
-            res,
-            [...list, ...posts],
-            page_info.end_cursor,
-            index + 1
-          ).then(newList => resolve(newList));
+        const newList = [...list, ...posts];
+
+        if (newList.length >= LIMIT_OF_POSTS) {
+          resolve(newList.slice(0, LIMIT_OF_POSTS));
+        } else if (page_info.has_next_page) {
+          parsePost(res, newList, page_info.end_cursor, index + 1).then(
+            newList => resolve(newList)
+          );
         } else {
-          resolve([...list, ...posts]);
+          resolve(newList);
         }
       })
       .catch(error => {
@@ -102,7 +105,7 @@ router.get("/:username", function(req, res, next) {
         };
 
         saveDataToFile("data/3-posts-list.json", data, function() {
-          res.render(JSON.stringify(data));
+          res.send(JSON.stringify(data));
         });
       });
     });
@@ -120,7 +123,7 @@ router.get("/:username", function(req, res, next) {
       };
 
       saveDataToFile("data/3-posts-list.json", data, function() {
-        res.render(JSON.stringify(data));
+        res.send(JSON.stringify(data));
       });
     });
   }

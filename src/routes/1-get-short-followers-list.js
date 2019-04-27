@@ -8,7 +8,7 @@ var saveDataToFile = require("../services/saveDataToFile");
 
 var router = express.Router();
 
-function getFollowers(list, index, end_cursor) {
+function getFollowers(res, list, index, end_cursor) {
   return new Promise(resolve => {
     const variables = {
       id: 2259414318,
@@ -41,6 +41,7 @@ function getFollowers(list, index, end_cursor) {
 
           if (page_info.has_next_page) {
             const request = getFollowers(
+              res,
               followerList,
               index + 1,
               page_info.end_cursor
@@ -63,17 +64,24 @@ function getFollowers(list, index, end_cursor) {
             res.send(JSON.stringify(data));
           });
         });
-    }, 2000);
+    }, 1500);
   });
 }
 
 /* GET followers listing. */
 router.get("/", function(req, res, next) {
-  const request = getFollowers(
-    shortFollowersList.list,
-    shortFollowersList.index,
-    shortFollowersList.end_cursor
-  );
+  let request;
+
+  if (shortFollowersList.index !== 0) {
+    request = getFollowers(
+      res,
+      shortFollowersList.list,
+      shortFollowersList.index,
+      shortFollowersList.end_cursor
+    );
+  } else {
+    request = getFollowers(res, [], 0);
+  }
 
   request.then(followerList => {
     const data = {
