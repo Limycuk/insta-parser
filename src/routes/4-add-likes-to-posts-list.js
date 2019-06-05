@@ -47,14 +47,15 @@ function filtersFollowers(usernames) {
 
 function parsePost(parsedPosts, post, index) {
   return new Promise(resolve => {
-    console.log("post index == ", index);
-
     parseLikes([], post.shortcode).then(usernames => {
-      const likes = filtersFollowers(usernames);
+      const filteredLikes = filtersFollowers(usernames);
       const newList = parsedPosts.concat([
         {
           ...post,
-          likes
+          likes: {
+            count: post.likes,
+            ...filteredLikes
+          }
         }
       ]);
 
