@@ -5,6 +5,7 @@ var config = require("config");
 
 var postsList = require("../../data/3-posts-list.json");
 var saveDataToFile = require("../services/saveDataToFile");
+var parseHashTags = require("../services/parseHashTags");
 
 var router = express.Router();
 
@@ -35,11 +36,19 @@ function parsePost(res, list, end_cursor, index) {
           page_info
         } = response.data.data.user.edge_owner_to_timeline_media;
         const posts = edges.map(edge => {
+          const { edge_media_to_caption } = edge.node;
+          const imageDescriptions = edge_media_to_caption.edges.map(
+            item => item.node.text
+          );
+
           return {
             display_url: edge.node.display_url,
             id: edge.node.id,
             shortcode: edge.node.shortcode,
-            location: edge.node.location
+            location: edge.node.location,
+            hashTags: parseHashTags(imageDescriptions),
+            likes: edge.node.edge_media_preview_like.count,
+            comments: edge.node.edge_media_to_comment.count
           };
         });
 
@@ -89,12 +98,19 @@ router.get("/:username", function(req, res, next) {
       } = response.data.graphql.user.edge_owner_to_timeline_media;
 
       const posts = edges.map(edge => {
+        const { edge_media_to_caption } = edge.node;
+        const imageDescriptions = edge_media_to_caption.edges.map(
+          item => item.node.text
+        );
+
         return {
           display_url: edge.node.display_url,
           id: edge.node.id,
           shortcode: edge.node.shortcode,
           location: edge.node.location,
-          likes: edge.node.edge_media_preview_like.count
+          hashTags: parseHashTags(imageDescriptions),
+          likes: edge.node.edge_media_preview_like.count,
+          comments: edge.node.edge_media_to_comment.count
         };
       });
 

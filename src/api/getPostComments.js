@@ -23,17 +23,19 @@ function getPostComments(shortcode, end_cursor) {
         cookie: config.get("cookie")
       }
     }).then(response => {
-      console.log("ww == ", response.data.data.shortcode_media);
       const {
         edges,
         page_info
       } = response.data.data.shortcode_media.edge_media_to_parent_comment;
+
       const data = edges.reduce((memo, item) => {
         const { text, owner, edge_threaded_comments } = item.node;
         const { username } = owner;
 
         if (memo[username]) {
           memo[username].push(text);
+        } else {
+          memo[username] = [text];
         }
 
         for (let item of edge_threaded_comments.edges) {
@@ -42,8 +44,12 @@ function getPostComments(shortcode, end_cursor) {
 
           if (memo[username]) {
             memo[username].push(text);
+          } else {
+            memo[username] = [text];
           }
         }
+
+        return memo;
       }, {});
 
       resolve({

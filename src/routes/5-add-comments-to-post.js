@@ -4,6 +4,7 @@ var shortFollowersList = require("../../data/1-short-followers-list.json");
 var postsList = require("../../data/4-posts-list-with-likes.json");
 var postsListWithComments = require("../../data/5-posts-list-with-likes-and-posts.json");
 var saveDataToFile = require("../services/saveDataToFile");
+var parseHashTags = require("../services/parseHashTags");
 var getPostComments = require("../api/getPostComments");
 var router = express.Router();
 
@@ -23,7 +24,7 @@ function mergeComments(list, otherList) {
     memo[item] = comments;
 
     return memo;
-  });
+  }, {});
 }
 
 function parseComments(list, shortcode, end_cursor) {
@@ -42,14 +43,16 @@ function parseComments(list, shortcode, end_cursor) {
           resolve(updatedList);
         }
       });
-    }, 2900);
+    }, 2800);
   });
 }
 
-function filtersFollowers(list) {
+function filtersFollowers(owner, list) {
   return Object.keys(list).reduce(
     (memo, username) => {
-      if (shortFollowersList.list.includes(username)) {
+      if (owner === username) {
+        memo.owner = list[owner];
+      } else if (shortFollowersList.list.includes(username)) {
         memo.followers[username] = list[username];
       } else {
         memo.nonFollowers[username] = list[username];
@@ -64,16 +67,23 @@ function filtersFollowers(list) {
   );
 }
 
-function parsePost(parsedPosts, post, index) {
+function parsePost(owner, parsedPosts, post, index) {
   return new Promise(resolve => {
     console.log("post index == ", index);
 
     parseComments({}, post.shortcode).then(list => {
-      const comments = filtersFollowers(list);
+      const comments = filtersFollowers(owner, list);
+      let hashtags = [];
+
+      if (comments.owner) {
+        hashtags = parseHashTags(comments.owner);
+      }
+      console.log("hashtags == ", hashtags);
       const newList = parsedPosts.concat([
         {
           ...post,
-          comments
+          comments,
+          hashtags
         }
       ]);
 
@@ -95,7 +105,8 @@ function getInitData() {
 }
 
 /* GET home page. */
-router.get("/", function(req, res) {
+router.get("/:username", function(req, res) {
+  const { username } = req.params;
   const { initialIndex, initialList, remainingPosts } = getInitData();
 
   const result = remainingPosts.reduce((memo, post, index) => {
@@ -112,15 +123,15 @@ router.get("/", function(req, res) {
               "data/5-posts-list-with-likes-and-posts.json",
               data,
               function() {
-                resolve(parsePost(list, post, initialIndex + index));
+                resolve(parsePost(username, list, post, initialIndex + index));
               }
             );
-          }, 4000);
+          }, 3900);
         });
       });
     }
 
-    return parsePost(initialList, post, initialIndex);
+    return parsePost(username, initialList, post, initialIndex);
   }, null);
 
   result.then(postsListWithComments => {
