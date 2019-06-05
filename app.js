@@ -9,7 +9,8 @@ var shortFollowersListRouter = require("./src/routes/1-get-short-followers-list"
 var fullFollowersListRouter = require("./src/routes/2-get-full-followers-list");
 var postsListRouter = require("./src/routes/3-get-posts-list");
 var postsListWithLikesRouter = require("./src/routes/4-add-likes-to-posts-list");
-var followersListWithLikesRouter = require("./src/routes/5-add-likes-to-user.js");
+var postsListWithLikesAndCommentsRouter = require("./src/routes/5-add-comments-to-post");
+var followersListWithLikesRouter = require("./src/routes/6-add-likes-to-user");
 
 var app = express();
 
@@ -28,6 +29,7 @@ app.use("/get-short-follower-list", shortFollowersListRouter);
 app.use("/get-full-followers-list", fullFollowersListRouter);
 app.use("/get-posts-list", postsListRouter);
 app.use("/add-likes-to-posts", postsListWithLikesRouter);
+app.use("/add-comments-to-posts", postsListWithLikesAndCommentsRouter);
 app.use("/add-likes-to-user", followersListWithLikesRouter);
 
 // catch 404 and forward to error handler

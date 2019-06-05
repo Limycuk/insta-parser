@@ -34,7 +34,7 @@ router.get("/", function(req, res, next) {
   });
 
   saveDataToFile(
-    "data/5-full-followers-list-with-likes.json",
+    "data/6-full-followers-list-with-likes.json",
     followersWithLikes,
     function() {
       res.send(JSON.stringify(followersWithLikes.length));

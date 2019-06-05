@@ -1,6 +1,5 @@
 var express = require("express");
 var axios = require("axios");
-var fs = require("fs");
 var config = require("config");
 
 var shortFollowersList = require("../../data/1-short-followers-list.json");
@@ -54,12 +53,12 @@ function parseFollower(res, list, username, index) {
             res.send(JSON.stringify(data));
           });
         });
-    }, 900);
+    }, 850);
   });
 }
 
 /* GET home page. */
-router.get("/", function(req, res, next) {
+router.get("/", function(req, res) {
   const followerList = shortFollowersList.list.slice(fullFollowersList.index);
 
   const result = followerList.reduce((memo, username, index) => {

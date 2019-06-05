@@ -64,7 +64,6 @@ function getInitData() {
 /* GET followers listing. */
 router.get("/:username", function(req, res, next) {
   const { username } = req.params;
-
   const { list, index, end_cursor } = getInitData();
 
   const request = getFollowers(res, username, list, index, end_cursor);

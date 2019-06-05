@@ -1,11 +1,9 @@
 var axios = require("axios");
 var config = require("config");
 
-function getFollowerUsernames(username, end_cursor) {
+function getPostLikes(shortcode, end_cursor) {
   const variables = {
-    id: config.get(`userIds.${username.replace(/\./g, "_")}`),
-    include_reel: false,
-    fetch_mutual: false,
+    shortcode: shortcode,
     first: 50
   };
 
@@ -15,18 +13,22 @@ function getFollowerUsernames(username, end_cursor) {
 
   return new Promise(resolve => {
     axios({
-      method: "GET",
+      method: "get",
       url: "https://www.instagram.com/graphql/query",
       params: {
-        query_hash: config.get("query_hash.followers"),
+        query_hash: config.get("query_hash.likes"),
         variables: JSON.stringify(variables)
       },
       headers: {
         cookie: config.get("cookie")
       }
     }).then(response => {
-      const { edges, page_info } = response.data.data.user.edge_followed_by;
-      const usernames = edges.map(follower => follower.node.username);
+      const {
+        edges,
+        page_info
+      } = response.data.data.shortcode_media.edge_liked_by;
+
+      const usernames = edges.map(edge => edge.node.username);
 
       resolve({
         usernames,
@@ -36,4 +38,4 @@ function getFollowerUsernames(username, end_cursor) {
   });
 }
 
-module.exports = getFollowerUsernames;
+module.exports = getPostLikes;

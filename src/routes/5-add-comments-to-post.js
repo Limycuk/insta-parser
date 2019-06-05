@@ -1,20 +1,39 @@
 var express = require("express");
 
 var shortFollowersList = require("../../data/1-short-followers-list.json");
-var postsList = require("../../data/3-posts-list.json");
-var postsListWithLikes = require("../../data/4-posts-list-with-likes.json");
+var postsList = require("../../data/4-posts-list-with-likes.json");
+var postsListWithComments = require("../../data/5-posts-list-with-likes-and-posts.json");
 var saveDataToFile = require("../services/saveDataToFile");
-var getPostLikes = require("../api/getPostLikes");
+var getPostComments = require("../api/getPostComments");
 var router = express.Router();
 
-function parseLikes(list, shortcode, end_cursor) {
+function mergeComments(list, otherList) {
+  const usernames = [...Object.keys(list), ...Object.keys(otherList)];
+  return usernames.reduce((memo, item) => {
+    let comments = [];
+
+    if (list[item]) {
+      comments = comments.concat(list[item]);
+    }
+
+    if (otherList[item]) {
+      comments = comments.concat(otherList[item]);
+    }
+
+    memo[item] = comments;
+
+    return memo;
+  });
+}
+
+function parseComments(list, shortcode, end_cursor) {
   return new Promise(resolve => {
     setTimeout(() => {
-      getPostLikes(shortcode, end_cursor).then(({ usernames, page_info }) => {
-        const updatedList = list.concat(usernames);
+      getPostComments(shortcode, end_cursor).then(({ data, page_info }) => {
+        const updatedList = mergeComments(list, data);
 
         if (page_info.has_next_page) {
-          parseLikes(updatedList, shortcode, page_info.end_cursor).then(
+          parseComments(updatedList, shortcode, page_info.end_cursor).then(
             newList => {
               resolve(newList);
             }
@@ -27,20 +46,20 @@ function parseLikes(list, shortcode, end_cursor) {
   });
 }
 
-function filtersFollowers(usernames) {
-  return usernames.reduce(
+function filtersFollowers(list) {
+  return Object.keys(list).reduce(
     (memo, username) => {
       if (shortFollowersList.list.includes(username)) {
-        memo.followers.push(username);
+        memo.followers[username] = list[username];
       } else {
-        memo.nonFollowers.push(username);
+        memo.nonFollowers[username] = list[username];
       }
 
       return memo;
     },
     {
-      followers: [],
-      nonFollowers: []
+      followers: {},
+      nonFollowers: {}
     }
   );
 }
@@ -49,12 +68,12 @@ function parsePost(parsedPosts, post, index) {
   return new Promise(resolve => {
     console.log("post index == ", index);
 
-    parseLikes([], post.shortcode).then(usernames => {
-      const likes = filtersFollowers(usernames);
+    parseComments({}, post.shortcode).then(list => {
+      const comments = filtersFollowers(list);
       const newList = parsedPosts.concat([
         {
           ...post,
-          likes
+          comments
         }
       ]);
 
@@ -64,9 +83,9 @@ function parsePost(parsedPosts, post, index) {
 }
 
 function getInitData() {
-  const initialIndex = postsListWithLikes.index;
+  const initialIndex = postsListWithComments.index;
   const remainingPosts = postsList.list.slice(initialIndex);
-  const initialList = postsListWithLikes.list;
+  const initialList = postsListWithComments.list;
 
   return {
     initialIndex,
@@ -76,7 +95,7 @@ function getInitData() {
 }
 
 /* GET home page. */
-router.get("/", function(req, res, next) {
+router.get("/", function(req, res) {
   const { initialIndex, initialList, remainingPosts } = getInitData();
 
   const result = remainingPosts.reduce((memo, post, index) => {
@@ -90,7 +109,7 @@ router.get("/", function(req, res, next) {
             };
 
             saveDataToFile(
-              "data/4-posts-list-with-likes.json",
+              "data/5-posts-list-with-likes-and-posts.json",
               data,
               function() {
                 resolve(parsePost(list, post, initialIndex + index));
@@ -104,15 +123,19 @@ router.get("/", function(req, res, next) {
     return parsePost(initialList, post, initialIndex);
   }, null);
 
-  result.then(postsListWithLikes => {
+  result.then(postsListWithComments => {
     const data = {
-      list: postsListWithLikes,
+      list: postsListWithComments,
       index: 0
     };
 
-    saveDataToFile("data/4-posts-list-with-likes.json", data, function() {
-      res.send(JSON.stringify(postsListWithLikes.length));
-    });
+    saveDataToFile(
+      "data/5-posts-list-with-likes-and-posts.json",
+      data,
+      function() {
+        res.send(JSON.stringify(postsListWithComments.length));
+      }
+    );
   });
 });
 

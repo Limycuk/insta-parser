@@ -93,7 +93,8 @@ router.get("/:username", function(req, res, next) {
           display_url: edge.node.display_url,
           id: edge.node.id,
           shortcode: edge.node.shortcode,
-          location: edge.node.location
+          location: edge.node.location,
+          likes: edge.node.edge_media_preview_like.count
         };
       });
 
